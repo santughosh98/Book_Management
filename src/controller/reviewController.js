@@ -43,16 +43,16 @@ const CreateReview = async function (req, res) {
 
         const saveData = { bookId: bookid, reviewedBy, reviewedAt: new Date(), rating, review }
 
-        let UpdatereviewInBook = await bookModel.findOneAndUpdate({ _id: bookid }, { $inc: { reviews: 1 } },{new : true}).select({__v : 0})
+        let UpdatereviewInBook = await bookModel.findOneAndUpdate({ _id: bookid }, { $inc: { reviews: 1 } },{new : true}).select({__v : 0}).lean()
         let rewiewData = await reviewModel.create(saveData)
 
 
-        let bookRewiewData = JSON.parse(JSON.stringify(UpdatereviewInBook))
+       // let bookRewiewData = JSON.parse(JSON.stringify(UpdatereviewInBook))
 
-        bookRewiewData["rewiewData"] = {bookId: bookid,reviewedBy: rewiewData.reviewedBy,reviewedAt: rewiewData.reviewedAt,rating: rewiewData.rating,review: rewiewData.review}
+       UpdatereviewInBook["rewiewData"] = {_id:rewiewData ._id,bookId: bookid,reviewedBy: rewiewData.reviewedBy,reviewedAt: rewiewData.reviewedAt,rating: rewiewData.rating,review: rewiewData.review}
 
 
-        return res.status(201).send({ status: true, message: "Success", data: bookRewiewData })
+        return res.status(201).send({ status: true, message: "Success", data: UpdatereviewInBook })
 
     } catch (error) {
         res.status(500).send({ status: false, msg: error.message })
@@ -69,7 +69,7 @@ const updateReview = async function (req, res) {
         
         if (!mongoose.Types.ObjectId.isValid(bookId)) return res.status(400).send({ status: false, message: "invalid BookId" })
 
-        const requiredBook = await bookModel.findOne({ _id: bookId, isDeleted: false }).select({__v : 0})
+        const requiredBook = await bookModel.findOne({ _id: bookId, isDeleted: false }).select({__v : 0}).lean()
         if (!requiredBook) return res.status(404).send({ status: false, message: "No Such book present" })
 
         if (!mongoose.Types.ObjectId.isValid(reviewId)) return res.status(400).send({ status: false, message: "invalid reviewId" })
@@ -112,10 +112,10 @@ const updateReview = async function (req, res) {
 
         const updateReview =  await reviewModel.findByIdAndUpdate({_id :reviewId},{$set :obj},{new : true}).select({__v : 0 ,updatedAt : 0,createdAt : 0 , isDeleted : 0})
 
-        let combineBookRewiew = JSON.parse(JSON.stringify(requiredBook))
-        combineBookRewiew["reviewData"] = updateReview
+      //  let combineBookRewiew = JSON.parse(JSON.stringify(requiredBook))
+        requiredBook["reviewData"] = updateReview
 
-        return res.status(200).send({status : true , msg : "Update Success Done", data : combineBookRewiew})
+        return res.status(200).send({status : true , msg : "Update Success Done", data : requiredBook})
 
     }catch(err){
         return res.status(500).send({status : false , msg : err.message})
